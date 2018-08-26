@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class SC_GameManager : MonoBehaviour {
+    public GameObject Game, Menu;
     public void Roll()
     {
         SC_Logics.Instance.Roll();
@@ -38,5 +39,14 @@ public class SC_GameManager : MonoBehaviour {
     public void ReRollOpponent()
     {
         SC_Logics.Instance.ReRollOpponent();
+    }
+    public void ReStartGame()
+    {
+        SC_Logics.Instance.RestartGame();
+    }
+    public void BackToMenu()
+    {
+        Game.SetActive(false);
+        Menu.SetActive(true);
     }
 }

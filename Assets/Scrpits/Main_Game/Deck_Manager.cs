@@ -12,7 +12,9 @@ public class Deck_Manager : MonoBehaviour {
     HouseCard House;
     ChurchCard Church;
     MedicCard Medic;
-    MoveCard TransportToInner, ransportToOuter;
+    DragonCard Dragon;
+    BlackSmithCard BlackSmith;
+    MoveCard TransportToInner, TransportToOuter;
     bool RegularDraw;
     public Sprite[] Album;
     private static Deck_Manager inst = null;
@@ -37,10 +39,11 @@ public class Deck_Manager : MonoBehaviour {
         
         House = new HouseCard(6);
         Church = new ChurchCard(7);
-        TransportToInner = new MoveCard(10,109);
+        TransportToInner = new MoveCard(10, 109);
+        TransportToOuter = new MoveCard(17, 14);
         Medic = new MedicCard(9);
-
-
+        BlackSmith = new BlackSmithCard(8);
+        Dragon = new DragonCard(12, 16);
         L1 = new List<Card>();
         L2 = new List<Card>();
         BlueDeck = new Stack<Card>();
@@ -127,6 +130,11 @@ public class Deck_Manager : MonoBehaviour {
                 Curr=Church;
                 RegularDraw = false;
             }
+            else if (Tile == 11)
+            {
+                Curr = BlackSmith;
+                RegularDraw = false;
+            }
             else if (Tile == 14)
             {
                 Curr = TransportToInner;
@@ -145,6 +153,16 @@ public class Deck_Manager : MonoBehaviour {
         }
         else
         {
+            if(Tile == 109)
+            {
+                Curr = TransportToOuter;
+                RegularDraw = false;
+            }
+            else if(Tile  == 106)
+            {
+                Curr = Dragon;
+                RegularDraw = false;
+            }
             if (RegularDraw)
             {
             Curr = RedDeck.Peek();
@@ -340,6 +358,29 @@ public class MedicCard : Card
         SC_Logics.Instance.MakeCardShow();
     }
 }
+public class BlackSmithCard : Card
+{
+    public BlackSmithCard(int s)
+    {
+        Picture = s;
+    }
+    public override void PlayCard()
+    {
+        SC_Logics.Instance.UnityObjects["Drawen_Card"].SetActive(true);
+        SC_Logics.Instance.UnityObjects["Drawen_Card"].GetComponent<Image>().sprite = Deck_Manager.Instance.Album[Picture];
+        if(Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).gold >= 5)
+        {
+            SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "BlackSmith\nYou upgraded your equipment for 5 gold";
+            Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).gold -= 5;
+            Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).pwr += 1;
+        }
+        else
+        {
+            SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "BlackSmith\nYou couldent afford to pay the BlackSmith";
+        }
+        SC_Logics.Instance.MakeCardShow();
+    }
+}
 public class MoveCard : Card
 {
     int toMove;
@@ -356,5 +397,29 @@ public class MoveCard : Card
         SC_Logics.Instance.MakeCardShow();
         SC_Logics.Instance.Move(toMove);
         SC_Logics.Instance.UnityObjects["Interact"].SetActive(false);
+    }
+}
+public class DragonCard : Card
+{
+    int Power;
+    public DragonCard(int P, int S)
+    {
+        Picture = S;
+        Power = P;
+    }
+    public override void PlayCard()
+    {
+        SC_Logics.Instance.UnityObjects["Drawen_Card"].SetActive(true);
+        SC_Logics.Instance.UnityObjects["Drawen_Card"].GetComponent<Image>().sprite = Deck_Manager.Instance.Album[Picture];
+        SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Monster\nPower level " + Power;
+        Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).Turn_Status = Global_Variables.turn_Status.Battle;
+        if (Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).IsABot == false)
+            SC_Logics.Instance.EnableDice(true);
+        SC_Logics.Instance.IsFightingDragon = true;
+    }
+
+    public override int GetPower()
+    {
+        return Power;
     }
 }

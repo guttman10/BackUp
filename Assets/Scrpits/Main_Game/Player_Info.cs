@@ -33,13 +33,15 @@ public class Player_Info : MonoBehaviour
             xp -= 5;
         }
     }
-    public void TakeAhit()
+    public bool TakeAhit()
     {
         hp--;
         if (hp == 0)
         {
-            Debug.Log("Player" + SC_Logics.Instance.GetCurrentPlayer() + " is Dead...");
+            RestartStats();
+            return true;
         }
+        return false;
     }
 
 }

@@ -7,15 +7,17 @@ public class SC_Logics : MonoBehaviour {
     public Sprite[] DiceNum;
     public Sprite PlayerBattleBackGround;
     public Button Dice;
+    public Button BasicTile;
     public int DiceValue, Turn;
     int TotalPower1, TotalPower2;
-    int PlayerCount = 1;//the =1 is to remove a warrning
+    int PlayerCount = 4;
     int Oppnent;
     private IEnumerator coroutine;
     static SC_Logics inst;
-    public Button go1, go2;
+    Button go1, go2;
     ColorBlock TileColorer,Original_TileColor;
-    bool Player_Rolled,HasReRolled, HasOpponentReRolled, OpponentRoll;
+    bool Player_Rolled, HasReRolled, HasOpponentReRolled, OpponentRoll,NoWinner;
+    public bool IsFightingDragon;
     public Dictionary<string, GameObject> Tilles;
     public Dictionary<string, GameObject> UnityObjects;
     public Dictionary<string, GameObject> Players;
@@ -24,7 +26,7 @@ public class SC_Logics : MonoBehaviour {
         get
         {
             if (inst == null)
-                inst = GameObject.Find("SC_Logics").GetComponent<SC_Logics>();
+                inst = GameObject.Find("Main_Game").GetComponent<SC_Logics>();
 
             return inst;
         }
@@ -33,18 +35,20 @@ public class SC_Logics : MonoBehaviour {
     {
         InitDiconatries();
         InitColorers();
-        RestartGame();
+    }
+    void OnEnable()
+    {
+        SetupGame();
         SetUpBoard();
     }
-    public void RemoveWhoDontPlay(int PlayerSetter)
+    /*public void RemoveWhoDontPlay(int PlayerSetter)
     {
         PlayerCount = PlayerSetter;
         for (int i = PlayerCount; i < 4 ;  i++)
         {
             Players["Player_"+(i+1)].SetActive(false);
         }
-    }
-
+    }**/
     void InitDiconatries()
     {
         Tilles = new Dictionary<string, GameObject>();
@@ -69,26 +73,37 @@ public class SC_Logics : MonoBehaviour {
         TileColorer.normalColor = Color.yellow;
         TileColorer.highlightedColor = Color.green;
         TileColorer.colorMultiplier = 1;
-        Original_TileColor = Tilles["Tile_0"].GetComponent<Button>().colors;
+        Original_TileColor = BasicTile.GetComponent<Button>().colors;
+    }
+    public void RestartGame()
+    {
+        SetupGame();
+        SetUpBoard();
     }
 
-    void RestartGame()
+    void SetupGame()
     {
         Turn = 0;
-        for(int i =0; i < 4; i++)
+        for(int i =1; i <= PlayerCount; i++)
         {
-            Player_Info.Stats(i+1).RestartStats();
+           Player_Info.Stats(i).RestartStats();
+            RestartPlayerPos(i);
         }
         Player_Info.Stats(GetCurrentPlayer()).Turn_Status = Global_Variables.turn_Status.Moving;
-        Player_Rolled = false;
         TotalPower1 = 0;
         TotalPower2 = 0;
+        UnityObjects["Winning_Msg"].SetActive(false);
+        NoWinner = true;
+        EnableDice(true);
     }
 
     void SetUpBoard()
     {
+        Player_Rolled = false;
         HasReRolled = false;
         HasOpponentReRolled = false;
+        OpponentRoll = false;
+        IsFightingDragon = false;
         UnityObjects["Drawen_Card"].SetActive(false);
         UnityObjects["ReRoll2"].SetActive(false);
         UnityObjects["Fight_Player"].SetActive(false);
@@ -102,6 +117,15 @@ public class SC_Logics : MonoBehaviour {
         UnityObjects["Battle"].SetActive(false);
         UnityObjects["Continue"].SetActive(false);
         UnityObjects["ReRoll"].SetActive(false);
+    }
+    public void RestartPlayerPos(int p)
+    {
+        Vector2 Target = Tilles["Tile_" + 0].GetComponent<RectTransform>().position;
+        Vector2 Player = Players["Player_" + p].GetComponent<RectTransform>().position;
+        Target.y += Random.Range(-20, 20);
+        Target.x += Random.Range(-20, 20);
+        Players["Player_" +p].GetComponent<RectTransform>().position = Vector2.MoveTowards(Player, Target, 1000);
+        Player_Info.Stats(p).pos = 0;
     }
     public int GetCurrentPlayer()
     {
@@ -122,14 +146,16 @@ public class SC_Logics : MonoBehaviour {
         {
             ApplyPlayerBattleResult();
         }
-        SetUpBoard();
-        Player_Info.Stats(GetCurrentPlayer()).Turn_Status = Global_Variables.turn_Status.Idle;
-        Turn++;
-        Player_Info.Stats(GetCurrentPlayer()).Turn_Status = Global_Variables.turn_Status.Moving;
-        if (Player_Info.Stats(GetCurrentPlayer()).IsABot)
-            Invoke("BotPlay",0.5f);
-        else
-            EnableDice(true);
+        if(NoWinner){
+            SetUpBoard();
+            Player_Info.Stats(GetCurrentPlayer()).Turn_Status = Global_Variables.turn_Status.Idle;
+            Turn++;
+            Player_Info.Stats(GetCurrentPlayer()).Turn_Status = Global_Variables.turn_Status.Moving;
+            if (Player_Info.Stats(GetCurrentPlayer()).IsABot)
+                Invoke("BotPlay", 0.5f);
+            else
+                EnableDice(true);
+        }
 
     }
     public void Roll()
@@ -219,9 +245,9 @@ public class SC_Logics : MonoBehaviour {
         Player_Info.Stats(GetCurrentPlayer()).pos = Tile_Num;
         UpdateTiles(false, Original_TileColor);
         UnityObjects["Interact"].SetActive(true);
-        for(int i =1; i<PlayerCount;i++)
+        for(int i =1; i<=PlayerCount;i++)
         {
-            if(Player_Info.Stats(GetCurrentPlayer()).pos == Player_Info.Stats(GetCurrentPlayer() + i).pos)
+            if(Player_Info.Stats(i).pos == Player_Info.Stats(GetCurrentPlayer()).pos && i != GetCurrentPlayer())
             {
                 UnityObjects["Fight_Player"].SetActive(true);
             }
@@ -265,7 +291,7 @@ public class SC_Logics : MonoBehaviour {
         else
         {
             TotalPower2 = Deck_Manager.Instance.GetPower() + DiceValue;
-            UnityObjects["Battle_Roll"].GetComponent<Text>().text += " VS " + TotalPower2;
+            UnityObjects["Battle_Roll"].GetComponent<Text>().text = TotalPower1 + " VS " + TotalPower2;
             BattleResult();
         }
         if (HasReRolled)
@@ -295,13 +321,27 @@ public class SC_Logics : MonoBehaviour {
     
     void ApplyBattleResult()
     {
+        
         if (TotalPower1 > TotalPower2)
         {
-            Player_Info.Stats(GetCurrentPlayer()).AddXp(Deck_Manager.Instance.GetPower());
+            if (IsFightingDragon)
+            {
+                NoWinner = false;
+                UnityObjects["Winning_Msg"].SetActive(true);
+                UnityObjects["Winning_Text"].GetComponent<Text>().text = "Player " + GetCurrentPlayer() + "\n Victory!";
+            }
+            else
+            {
+                Player_Info.Stats(GetCurrentPlayer()).AddXp(Deck_Manager.Instance.GetPower());
+            }
         }
         else if (TotalPower1 < TotalPower2)
         {
-            Player_Info.Stats(GetCurrentPlayer()).TakeAhit();
+            if (Player_Info.Stats(GetCurrentPlayer()).TakeAhit())
+            {
+                RestartPlayerPos(GetCurrentPlayer());
+            }
+
         }
     }
     public void MakeCardShow()
@@ -319,11 +359,17 @@ public class SC_Logics : MonoBehaviour {
     {
         if (TotalPower1 > TotalPower2)
         {
-            Player_Info.Stats(Oppnent).TakeAhit();
+            if (Player_Info.Stats(Oppnent).TakeAhit())
+            {
+                RestartPlayerPos(Oppnent);
+            }
         }
         else if (TotalPower1 < TotalPower2)
         {
-            Player_Info.Stats(GetCurrentPlayer()).TakeAhit();
+            if (Player_Info.Stats(GetCurrentPlayer()).TakeAhit())
+            {
+                RestartPlayerPos(GetCurrentPlayer());
+            }
         }
     }
     public void SetUpFightPlayer()

@@ -3,10 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class UI_Controller : MonoBehaviour {
-
+    public GameObject MainGame;
+    void Awake()
+    {
+        MainGame.SetActive(false);
+    }
     public void SinglePlayer()
     {
         UI_Manager.BtnClick();
+        MainGame.SetActive(true);
         UI_Manager.SinglePlayer();
     }
     public void Back()

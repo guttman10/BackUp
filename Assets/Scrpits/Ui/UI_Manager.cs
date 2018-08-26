@@ -8,7 +8,7 @@ public class UI_Manager : MonoBehaviour {
     enum screen {Main_Menu,Loading,Options,Menu_Multi,Stud_Menu }
     static screen curr;
     static Stack<screen> s;
-    void Start()
+    void OnEnable()
     {
         InitDic();
         s = new Stack<screen>();
@@ -16,7 +16,6 @@ public class UI_Manager : MonoBehaviour {
         unityObjects["Menu_Multi"].SetActive(false);
         unityObjects["Options"].SetActive(false);
         unityObjects["Stud_Menu"].SetActive(false);
-        unityObjects["Main_Game"].SetActive(false);
         curr = screen.Main_Menu;
     }
     void InitDic()
@@ -41,11 +40,9 @@ public class UI_Manager : MonoBehaviour {
     }
     public static void SinglePlayer()
     {
-        unityObjects["Main_Game"].SetActive(true);
         Player_Info.Stats(2).IsABot = true;
         Player_Info.Stats(3).IsABot = true;
         Player_Info.Stats(4).IsABot = true;
-        SC_Logics.Instance.RemoveWhoDontPlay(3);
         unityObjects["Ui"].SetActive(false);
     }
     public static void MultiPlayer()
