@@ -9,6 +9,11 @@ public class Deck_Manager : MonoBehaviour {
     Stack<Card> BlueDeck,RedDeck;
     List<Card> L1, L2;
     Card Curr;
+    HouseCard House;
+    ChurchCard Church;
+    MedicCard Medic;
+    MoveCard TransportToInner, ransportToOuter;
+    bool RegularDraw;
     public Sprite[] Album;
     private static Deck_Manager inst = null;
     public static Deck_Manager Instance
@@ -29,6 +34,13 @@ public class Deck_Manager : MonoBehaviour {
 
     private void InitDecks()
     {
+        
+        House = new HouseCard(6);
+        Church = new ChurchCard(7);
+        TransportToInner = new MoveCard(10,109);
+        Medic = new MedicCard(9);
+
+
         L1 = new List<Card>();
         L2 = new List<Card>();
         BlueDeck = new Stack<Card>();
@@ -38,7 +50,9 @@ public class Deck_Manager : MonoBehaviour {
             L1.Add(new MonsterCard(2, 0));
             L1.Add(new MonsterCard(3, 1));
             L1.Add(new MonsterCard(4, 2));
+            L2.Add(new MonsterCard(7, 12));
             L2.Add(new MonsterCard(9, 11));
+            L2.Add(new MonsterCard(8, 15));
 
         }
         for(int i =0; i<10; i++)
@@ -47,8 +61,8 @@ public class Deck_Manager : MonoBehaviour {
             L1.Add(new GoldCard(2, 3));
             L1.Add(new BlessCard(5));
             L1.Add(new CurseCard(4));
-            L2.Add(new BlessCard(5));
-            L2.Add(new CurseCard(4));
+            L2.Add(new BlessCard(14));
+            L2.Add(new CurseCard(13));
         }
 
     }
@@ -96,19 +110,49 @@ public class Deck_Manager : MonoBehaviour {
 
     public void Draw(int Tile)
     {
+        RegularDraw = true;
+        SC_Logics.Instance.UnityObjects["ReRoll"].SetActive(false);
         SC_Logics.Instance.UnityObjects["Interact"].SetActive(false);
         SC_Logics.Instance.UnityObjects["Fight_Player"].SetActive(false);
         CheckDeckForEmpty();
-        if(Tile >= 100)
+        if(Tile < 100)
         {
-            Curr = RedDeck.Peek();
-            RedDeck.Pop();
+            if(Tile == 0)
+            {
+               Curr=House;
+               RegularDraw = false;
+            }
+            else if(Tile == 6)
+            {
+                Curr=Church;
+                RegularDraw = false;
+            }
+            else if (Tile == 14)
+            {
+                Curr = TransportToInner;
+                RegularDraw = false;
+            }
+            else if(Tile == 17)
+            {
+                Curr = Medic;
+                RegularDraw = false;
+            }
+            if(RegularDraw)
+            {
+                Curr = BlueDeck.Peek();
+                BlueDeck.Pop();
+            }
         }
         else
         {
-            Curr = BlueDeck.Peek();
-            BlueDeck.Pop();
+            if (RegularDraw)
+            {
+            Curr = RedDeck.Peek();
+            RedDeck.Pop();
+            }
         }
+
+
         Curr.PlayCard();
     }
 
@@ -126,12 +170,11 @@ public class Deck_Manager : MonoBehaviour {
         return Curr.GetPower();
     }
 
-
-
 }
+
 public class Card
 {
-    protected int Picture;//this can save somespaace (using 100-200  ints insted of 100-200 sprites)
+    protected int Picture;//this can save somespace (using 100-200  ints insted of 100-200 sprites)
 
     public virtual void PlayCard()
     {
@@ -201,12 +244,12 @@ public class BlessCard : Card
                 SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Blessing\nYou have been granted 2 Coins";
                 break;
             case 2:
-                Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).hp += 2;
-                SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Blessing\nYou have been granted 2 Hp";
+                Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).hp += 1;
+                SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Blessing\nYou have been granted 1 Hp";
                 break;
             case 3:
-                Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).faith += 2;
-                SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Blessing\nYou have been granted 2 Faith";
+                Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).faith += 1;
+                SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Blessing\nYou have been granted 1 Faith";
                 break;
             case 4:
                 Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).AddXp(3);
@@ -251,4 +294,67 @@ public class CurseCard : Card
         SC_Logics.Instance.MakeCardShow();
     }
 
+}
+public class HouseCard : Card
+{
+    public HouseCard(int s)
+    {
+        Picture = s;
+    }
+    public override void PlayCard()
+    {
+        SC_Logics.Instance.UnityObjects["Drawen_Card"].SetActive(true);
+        SC_Logics.Instance.UnityObjects["Drawen_Card"].GetComponent<Image>().sprite = Deck_Manager.Instance.Album[Picture];
+        SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "House\nYou did some work and gained 1 Coin";
+        Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).gold += 1;
+        SC_Logics.Instance.MakeCardShow();
+    }
+}
+public class ChurchCard : Card
+{
+    public ChurchCard(int s)
+    {
+        Picture = s;
+    }
+    public override void PlayCard()
+    {
+        SC_Logics.Instance.UnityObjects["Drawen_Card"].SetActive(true);
+        SC_Logics.Instance.UnityObjects["Drawen_Card"].GetComponent<Image>().sprite = Deck_Manager.Instance.Album[Picture];
+        SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Church\nYou prayed and gained 1 Faith";
+        Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).faith += 1;
+        SC_Logics.Instance.MakeCardShow();
+    }
+}
+public class MedicCard : Card
+{
+    public MedicCard(int s)
+    {
+        Picture = s;
+    }
+    public override void PlayCard()
+    {
+        SC_Logics.Instance.UnityObjects["Drawen_Card"].SetActive(true);
+        SC_Logics.Instance.UnityObjects["Drawen_Card"].GetComponent<Image>().sprite = Deck_Manager.Instance.Album[Picture];
+        SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Medic\nYou Where healed for 1 HP";
+        Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).hp += 1;
+        SC_Logics.Instance.MakeCardShow();
+    }
+}
+public class MoveCard : Card
+{
+    int toMove;
+    public MoveCard(int s, int x)
+    {
+        Picture = s;
+        toMove = x;
+    }
+    public override void PlayCard()
+    {
+        SC_Logics.Instance.UnityObjects["Drawen_Card"].SetActive(true);
+        SC_Logics.Instance.UnityObjects["Drawen_Card"].GetComponent<Image>().sprite = Deck_Manager.Instance.Album[Picture];
+        SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Transport\nYou Where moved to another region";
+        SC_Logics.Instance.MakeCardShow();
+        SC_Logics.Instance.Move(toMove);
+        SC_Logics.Instance.UnityObjects["Interact"].SetActive(false);
+    }
 }

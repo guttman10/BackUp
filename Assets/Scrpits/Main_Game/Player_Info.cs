@@ -11,7 +11,7 @@ public class Player_Info : MonoBehaviour
     static Player_Info inst;
     public static Player_Info Stats(int id)
     {
-        inst = GameObject.Find("Player_Info_" + id).GetComponent<Player_Info>();
+        inst = GameObject.Find("Player_" + id).GetComponent<Player_Info>();
         return inst;
     }
     public void RestartStats()
