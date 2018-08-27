@@ -117,6 +117,7 @@ public class SC_Logics : MonoBehaviour {
         UnityObjects["Battle"].SetActive(false);
         UnityObjects["Continue"].SetActive(false);
         UnityObjects["ReRoll"].SetActive(false);
+        UnityObjects["Player_Stats"].SetActive(false);
     }
     public void RestartPlayerPos(int p)
     {
@@ -440,7 +441,14 @@ public class SC_Logics : MonoBehaviour {
         }
         MakeCardShow();
     }
-        
+    public void ShowStats()
+    {
+        UnityObjects["Player_Stats"].SetActive(true);
+        for (int i = 1; i <= 4; i++)
+        {
+            UnityObjects["Text_P"+i].GetComponent<Text>().text = "Power: "+Player_Info.Stats(i).pwr + "\nFaith: "+Player_Info.Stats(i).faith+"\nGold: "+ Player_Info.Stats(i).gold + "\nHP: "+ Player_Info.Stats(i).hp;
+        }
+    }
     public void EnableDice(bool Enabler)
     {
         Dice.GetComponent<Button>().interactable = Enabler;

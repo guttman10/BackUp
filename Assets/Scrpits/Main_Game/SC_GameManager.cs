@@ -49,4 +49,12 @@ public class SC_GameManager : MonoBehaviour {
         Game.SetActive(false);
         Menu.SetActive(true);
     }
+    public void ShowStats()
+    {
+        SC_Logics.Instance.ShowStats();
+    }
+    public void CloseStats()
+    {
+        SC_Logics.Instance.UnityObjects["Player_Stats"].SetActive(false);
+    }
 }
