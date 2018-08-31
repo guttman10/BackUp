@@ -14,7 +14,7 @@ public class SC_GameManager : MonoBehaviour {
     }
     public void Draw()
     {
-        Deck_Manager.Instance.Draw(Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).pos);
+        Deck_Manager.Instance.Draw(SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).pos);
     }
     public void PassTurn()
     {

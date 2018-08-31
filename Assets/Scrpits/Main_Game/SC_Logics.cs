@@ -10,7 +10,7 @@ public class SC_Logics : MonoBehaviour {
     public Button BasicTile;
     public int DiceValue, Turn;
     int TotalPower1, TotalPower2;
-    int PlayerCount = 4;
+    public int PlayerCount;
     int Oppnent;
     private IEnumerator coroutine;
     static SC_Logics inst;
@@ -41,14 +41,6 @@ public class SC_Logics : MonoBehaviour {
         SetupGame();
         SetUpBoard();
     }
-    /*public void RemoveWhoDontPlay(int PlayerSetter)
-    {
-        PlayerCount = PlayerSetter;
-        for (int i = PlayerCount; i < 4 ;  i++)
-        {
-            Players["Player_"+(i+1)].SetActive(false);
-        }
-    }**/
     void InitDiconatries()
     {
         Tilles = new Dictionary<string, GameObject>();
@@ -67,7 +59,10 @@ public class SC_Logics : MonoBehaviour {
         foreach (GameObject g in temp)
             Players.Add(g.name, g);
     }
-
+    public Player_Info Stats(int id)
+    {
+        return Players["Player_" + id].GetComponent<Player_Info>();
+    }
     void InitColorers()
     {
         TileColorer.normalColor = Color.yellow;
@@ -80,21 +75,29 @@ public class SC_Logics : MonoBehaviour {
         SetupGame();
         SetUpBoard();
     }
-
+    public void RemoveWhoDontPlay()
+    {
+        for (int i = PlayerCount; i < 4 ;  i++)
+        {
+            Players["Player_"+(i+1)].SetActive(false);
+        }
+    }
     void SetupGame()
     {
         Turn = 0;
         for(int i =1; i <= PlayerCount; i++)
         {
-           Player_Info.Stats(i).RestartStats();
+            Stats(i).RestartStats();
             RestartPlayerPos(i);
         }
-        Player_Info.Stats(GetCurrentPlayer()).Turn_Status = Global_Variables.turn_Status.Moving;
+        Stats(GetCurrentPlayer()).Turn_Status = Global_Variables.turn_Status.Moving;
         TotalPower1 = 0;
         TotalPower2 = 0;
         UnityObjects["Winning_Msg"].SetActive(false);
         NoWinner = true;
         EnableDice(true);
+        RemoveWhoDontPlay();
+        Debug.Log(PlayerCount);
     }
 
     void SetUpBoard()
@@ -126,7 +129,7 @@ public class SC_Logics : MonoBehaviour {
         Target.y += Random.Range(-20, 20);
         Target.x += Random.Range(-20, 20);
         Players["Player_" +p].GetComponent<RectTransform>().position = Vector2.MoveTowards(Player, Target, 1000);
-        Player_Info.Stats(p).pos = 0;
+        Stats(p).pos = 0;
     }
     public int GetCurrentPlayer()
     {
@@ -139,20 +142,20 @@ public class SC_Logics : MonoBehaviour {
 
     public void PassTurn()
     {
-        if (Player_Info.Stats(GetCurrentPlayer()).Turn_Status == Global_Variables.turn_Status.Battle)
+        if (Stats(GetCurrentPlayer()).Turn_Status == Global_Variables.turn_Status.Battle)
         {
             ApplyBattleResult();
         }
-        if (Player_Info.Stats(GetCurrentPlayer()).Turn_Status == Global_Variables.turn_Status.BattlePlayer)
+        if (Stats(GetCurrentPlayer()).Turn_Status == Global_Variables.turn_Status.BattlePlayer)
         {
             ApplyPlayerBattleResult();
         }
         if(NoWinner){
             SetUpBoard();
-            Player_Info.Stats(GetCurrentPlayer()).Turn_Status = Global_Variables.turn_Status.Idle;
+            Stats(GetCurrentPlayer()).Turn_Status = Global_Variables.turn_Status.Idle;
             Turn++;
-            Player_Info.Stats(GetCurrentPlayer()).Turn_Status = Global_Variables.turn_Status.Moving;
-            if (Player_Info.Stats(GetCurrentPlayer()).IsABot)
+            Stats(GetCurrentPlayer()).Turn_Status = Global_Variables.turn_Status.Moving;
+            if (Stats(GetCurrentPlayer()).IsABot)
                 Invoke("BotPlay", 0.5f);
             else
                 EnableDice(true);
@@ -181,7 +184,7 @@ public class SC_Logics : MonoBehaviour {
         }
         if (OpponentRoll)
         {
-            if(Player_Info.Stats(Oppnent).IsABot == false && HasOpponentReRolled == false)
+            if(Stats(Oppnent).IsABot == false && HasOpponentReRolled == false)
             {
                 UnityObjects["ReRoll2"].SetActive(true);
             }
@@ -190,16 +193,16 @@ public class SC_Logics : MonoBehaviour {
         }
         else
         {
-            if (Player_Info.Stats(GetCurrentPlayer()).IsABot == false && Player_Info.Stats(GetCurrentPlayer()).faith > 0 && HasReRolled == false)
+            if (Stats(GetCurrentPlayer()).IsABot == false && Stats(GetCurrentPlayer()).faith > 0 && HasReRolled == false)
                 UnityObjects["ReRoll"].SetActive(true);
-            if (Player_Info.Stats(GetCurrentPlayer()).IsABot == false && Player_Info.Stats(GetCurrentPlayer()).Turn_Status == Global_Variables.turn_Status.Moving)
-                SetTitlesForSelect(Player_Info.Stats(GetCurrentPlayer()).pos);
-            else if (Player_Info.Stats(GetCurrentPlayer()).Turn_Status == Global_Variables.turn_Status.Battle)
+            if (Stats(GetCurrentPlayer()).IsABot == false && Stats(GetCurrentPlayer()).Turn_Status == Global_Variables.turn_Status.Moving)
+                SetTitlesForSelect(Stats(GetCurrentPlayer()).pos);
+            else if (Stats(GetCurrentPlayer()).Turn_Status == Global_Variables.turn_Status.Battle)
             {
                 Player_Rolled = !Player_Rolled;
                 Battle(Player_Rolled);
             }
-            else if (Player_Info.Stats(GetCurrentPlayer()).Turn_Status == Global_Variables.turn_Status.BattlePlayer)
+            else if (Stats(GetCurrentPlayer()).Turn_Status == Global_Variables.turn_Status.BattlePlayer)
             {
                 if (HasReRolled)
                 {
@@ -216,19 +219,19 @@ public class SC_Logics : MonoBehaviour {
     }
     public void ReRoll()
     {
-        Player_Info.Stats(GetCurrentPlayer()).faith--;
+        Stats(GetCurrentPlayer()).faith--;
         UnityObjects["ReRoll"].SetActive(false);
         HasReRolled = true;
         coroutine = RollTheDice();
         StartCoroutine(coroutine);
-        if (Player_Info.Stats(GetCurrentPlayer()).Turn_Status == Global_Variables.turn_Status.Moving)
+        if (Stats(GetCurrentPlayer()).Turn_Status == Global_Variables.turn_Status.Moving)
         {
             UpdateTiles(false, Original_TileColor);
         }
     }
     public void ReRollOpponent()
     {
-        Player_Info.Stats(Oppnent).faith--;
+        Stats(Oppnent).faith--;
         UnityObjects["ReRoll2"].SetActive(false);
         HasOpponentReRolled = true;
         coroutine = RollTheDice();
@@ -243,12 +246,12 @@ public class SC_Logics : MonoBehaviour {
         Target.y += Random.Range(-20, 20);
         Target.x += Random.Range(-20, 20);
         Players["Player_" + GetCurrentPlayer()].GetComponent<RectTransform>().position = Vector2.MoveTowards(Player, Target, 1000);
-        Player_Info.Stats(GetCurrentPlayer()).pos = Tile_Num;
+        Stats(GetCurrentPlayer()).pos = Tile_Num;
         UpdateTiles(false, Original_TileColor);
         UnityObjects["Interact"].SetActive(true);
         for(int i =1; i<=PlayerCount;i++)
         {
-            if(Player_Info.Stats(i).pos == Player_Info.Stats(GetCurrentPlayer()).pos && i != GetCurrentPlayer())
+            if(Stats(i).pos == Stats(GetCurrentPlayer()).pos && i != GetCurrentPlayer())
             {
                 UnityObjects["Fight_Player"].SetActive(true);
             }
@@ -282,7 +285,7 @@ public class SC_Logics : MonoBehaviour {
         UnityObjects["Battle"].SetActive(true);
         if (Player_Has_Rolled)
         {
-            TotalPower1 = Player_Info.Stats(GetCurrentPlayer()).pwr + DiceValue;
+            TotalPower1 = Stats(GetCurrentPlayer()).pwr + DiceValue;
             UnityObjects["Battle_Roll"].GetComponent<Text>().text = ""+TotalPower1;
             if (HasReRolled == false)
             {
@@ -333,12 +336,12 @@ public class SC_Logics : MonoBehaviour {
             }
             else
             {
-                Player_Info.Stats(GetCurrentPlayer()).AddXp(Deck_Manager.Instance.GetPower());
+                Stats(GetCurrentPlayer()).AddXp(Deck_Manager.Instance.GetPower());
             }
         }
         else if (TotalPower1 < TotalPower2)
         {
-            if (Player_Info.Stats(GetCurrentPlayer()).TakeAhit())
+            if (Stats(GetCurrentPlayer()).TakeAhit())
             {
                 RestartPlayerPos(GetCurrentPlayer());
             }
@@ -347,7 +350,7 @@ public class SC_Logics : MonoBehaviour {
     }
     public void MakeCardShow()
     {
-        if (Player_Info.Stats(GetCurrentPlayer()).IsABot == false)
+        if (Stats(GetCurrentPlayer()).IsABot == false)
         {
             UnityObjects["Continue"].SetActive(true);
         }
@@ -360,14 +363,14 @@ public class SC_Logics : MonoBehaviour {
     {
         if (TotalPower1 > TotalPower2)
         {
-            if (Player_Info.Stats(Oppnent).TakeAhit())
+            if (Stats(Oppnent).TakeAhit())
             {
                 RestartPlayerPos(Oppnent);
             }
         }
         else if (TotalPower1 < TotalPower2)
         {
-            if (Player_Info.Stats(GetCurrentPlayer()).TakeAhit())
+            if (Stats(GetCurrentPlayer()).TakeAhit())
             {
                 RestartPlayerPos(GetCurrentPlayer());
             }
@@ -379,7 +382,7 @@ public class SC_Logics : MonoBehaviour {
         {
            if(i != GetCurrentPlayer())
             {
-                if (Player_Info.Stats(i).pos == Player_Info.Stats(GetCurrentPlayer()).pos && i <= PlayerCount)
+                if (Stats(i).pos == Stats(GetCurrentPlayer()).pos && i <= PlayerCount)
                 {
                     UnityObjects["Fight_Player_" + i].SetActive(true);
                 }
@@ -391,8 +394,8 @@ public class SC_Logics : MonoBehaviour {
     public void FightPlayer(int x)
     {
         Oppnent = x;
-        Player_Info.Stats(Oppnent).Turn_Status = Global_Variables.turn_Status.BattlePlayer;
-        Player_Info.Stats(GetCurrentPlayer()).Turn_Status = Global_Variables.turn_Status.BattlePlayer;
+        Stats(Oppnent).Turn_Status = Global_Variables.turn_Status.BattlePlayer;
+        Stats(GetCurrentPlayer()).Turn_Status = Global_Variables.turn_Status.BattlePlayer;
         for (int i = 1; i <= 4; i++)
         {
             UnityObjects["Fight_Player_" + i].SetActive(false);
@@ -405,7 +408,7 @@ public class SC_Logics : MonoBehaviour {
     void BattlePlayerPhaseOne()
     {
         UnityObjects["Battle"].SetActive(true);
-        TotalPower1 = Player_Info.Stats(GetCurrentPlayer()).pwr + DiceValue;
+        TotalPower1 = Stats(GetCurrentPlayer()).pwr + DiceValue;
         UnityObjects["Battle_Roll"].GetComponent<Text>().text = "" + TotalPower1;
         UnityObjects["Continue2"].SetActive(true);
     }
@@ -414,7 +417,7 @@ public class SC_Logics : MonoBehaviour {
         UnityObjects["ReRoll"].SetActive(false);
         UnityObjects["Continue2"].SetActive(false);
         OpponentRoll = true;
-        if (Player_Info.Stats(Oppnent).IsABot)
+        if (Stats(Oppnent).IsABot)
         {
             Invoke("Roll", 1);
         }
@@ -425,7 +428,7 @@ public class SC_Logics : MonoBehaviour {
     }
     void BattlePlayerPhaseThree()
     {
-        TotalPower2 = Player_Info.Stats(Oppnent).pwr + DiceValue;
+        TotalPower2 = Stats(Oppnent).pwr + DiceValue;
         UnityObjects["Battle_Roll"].GetComponent<Text>().text = TotalPower1 + " VS " + TotalPower2;
         if (TotalPower1 > TotalPower2)
         {
@@ -446,7 +449,7 @@ public class SC_Logics : MonoBehaviour {
         UnityObjects["Player_Stats"].SetActive(true);
         for (int i = 1; i <= 4; i++)
         {
-            UnityObjects["Text_P"+i].GetComponent<Text>().text = "Power: "+Player_Info.Stats(i).pwr + "\nFaith: "+Player_Info.Stats(i).faith+"\nGold: "+ Player_Info.Stats(i).gold + "\nHP: "+ Player_Info.Stats(i).hp;
+            UnityObjects["Text_P"+i].GetComponent<Text>().text = "Power: "+Stats(i).pwr + "\nFaith: "+Stats(i).faith+"\nGold: "+ Stats(i).gold + "\nHP: "+ Stats(i).hp;
         }
     }
     public void EnableDice(bool Enabler)

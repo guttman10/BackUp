@@ -9,11 +9,11 @@ public class Player_Info : MonoBehaviour
     public bool IsABot;
     public Global_Variables.turn_Status Turn_Status;
     static Player_Info inst;
-    public static Player_Info Stats(int id)
+    /*public static Player_Info Stats(int id)
     {
         inst = GameObject.Find("Player_" + id).GetComponent<Player_Info>();
         return inst;
-    }
+    }*/
     public void RestartStats()
     {
         gold = 1;

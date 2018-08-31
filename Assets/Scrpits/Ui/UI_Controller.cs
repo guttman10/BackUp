@@ -1,54 +1,51 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
 public class UI_Controller : MonoBehaviour {
-    public GameObject MainGame;
-    void Awake()
-    {
-        MainGame.SetActive(false);
-    }
     public void SinglePlayer()
     {
-        UI_Manager.BtnClick();
-        MainGame.SetActive(true);
-        UI_Manager.SinglePlayer();
+        UI_Manager.Instance.BtnClick();
+        UI_Manager.Instance.SinglePlayer();
     }
     public void Back()
     {
-        UI_Manager.BtnClick();
-        UI_Manager.Back();
+        UI_Manager.Instance.BtnClick();
+        UI_Manager.Instance.Back();
     }
     public void MultiPlayer()
     {
-        UI_Manager.BtnClick();
-        UI_Manager.MultiPlayer();
+        UI_Manager.Instance.BtnClick();
+        UI_Manager.Instance.MultiPlayer();
     }
     public void Options()
     {
-        UI_Manager.BtnClick();
-        UI_Manager.Options();
+        UI_Manager.Instance.BtnClick();
+        UI_Manager.Instance.Options();
     }
     public void StudMenu()
     {
-        UI_Manager.BtnClick();
-        UI_Manager.StudMenu();
+        UI_Manager.Instance.BtnClick();
+        UI_Manager.Instance.StudMenu();
     }
     public void Slider_Players()
     {
-        UI_Manager.UpdateSliderText();
+        UI_Manager.Instance.UpdateSliderPlayers_Single();
     }
     public void Slider_Music()
     {
-        UI_Manager.UpdateSliderText_Music();
+        UI_Manager.Instance.UpdateSliderText_Music();
     }
     public void Slider_Sfx()
     {
-        UI_Manager.UpdateSliderText_SFX();
+        UI_Manager.Instance.UpdateSliderText_SFX();
     }
     public void Git()
     {
-        UI_Manager.BtnClick();
-        UI_Manager.Git();
+        UI_Manager.Instance.BtnClick();
+        UI_Manager.Instance.Git();
+    }
+    public void StartGameSingle()
+    {
+        UI_Manager.Instance.StartGameSingle();
     }
 }

@@ -216,8 +216,8 @@ public class MonsterCard :Card
         SC_Logics.Instance.UnityObjects["Drawen_Card"].SetActive(true); 
         SC_Logics.Instance.UnityObjects["Drawen_Card"].GetComponent<Image>().sprite = Deck_Manager.Instance.Album[Picture];
         SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Monster\nPower level " + Power;
-        Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).Turn_Status = Global_Variables.turn_Status.Battle;
-        if(Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).IsABot==false)
+        SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).Turn_Status = Global_Variables.turn_Status.Battle;
+        if(SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).IsABot==false)
             SC_Logics.Instance.EnableDice(true);
     }
 
@@ -239,7 +239,7 @@ public class GoldCard : Card
         SC_Logics.Instance.UnityObjects["Drawen_Card"].SetActive(true);
         SC_Logics.Instance.UnityObjects["Drawen_Card"].GetComponent<Image>().sprite = Deck_Manager.Instance.Album[Picture];
         SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Gold\n"+ Value + " Coins";
-        Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).gold += Value;
+        SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).gold += Value;
         SC_Logics.Instance.MakeCardShow();
     }
 
@@ -258,19 +258,19 @@ public class BlessCard : Card
         switch (Rand)
         {
             case 1:
-                Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).gold += 2;
+                SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).gold += 2;
                 SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Blessing\nYou have been granted 2 Coins";
                 break;
             case 2:
-                Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).hp += 1;
+                SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).hp += 1;
                 SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Blessing\nYou have been granted 1 Hp";
                 break;
             case 3:
-                Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).faith += 1;
+                SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).faith += 1;
                 SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Blessing\nYou have been granted 1 Faith";
                 break;
             case 4:
-                Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).AddXp(3);
+                SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).AddXp(3);
                 SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Blessing\nYou have been granted 3 Xp";
                 break;
         }
@@ -293,19 +293,19 @@ public class CurseCard : Card
         switch (Rand)
         {
             case 1:
-                Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).gold = 0;
+                SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).gold = 0;
                 SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Curse\nYou Lost your Coins";
                 break;
             case 2:
-                Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).TakeAhit();
+                SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).TakeAhit();
                 SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Curse\nYou Were Damaged for 1 Hp";
                 break;
             case 3:
-                Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).faith = 0;
+                SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).faith = 0;
                 SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Curse\nYour Gods Have abandoned you\nYour Faith is now 0";
                 break;
             case 4:
-                Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).xp=0;
+                SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).xp=0;
                 SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Curse\nYou have Amnesia\nYour Xp is now 0";
                 break;
         }
@@ -324,7 +324,7 @@ public class HouseCard : Card
         SC_Logics.Instance.UnityObjects["Drawen_Card"].SetActive(true);
         SC_Logics.Instance.UnityObjects["Drawen_Card"].GetComponent<Image>().sprite = Deck_Manager.Instance.Album[Picture];
         SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "House\nYou did some work and gained 1 Coin";
-        Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).gold += 1;
+        SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).gold += 1;
         SC_Logics.Instance.MakeCardShow();
     }
 }
@@ -339,7 +339,7 @@ public class ChurchCard : Card
         SC_Logics.Instance.UnityObjects["Drawen_Card"].SetActive(true);
         SC_Logics.Instance.UnityObjects["Drawen_Card"].GetComponent<Image>().sprite = Deck_Manager.Instance.Album[Picture];
         SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Church\nYou prayed and gained 1 Faith";
-        Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).faith += 1;
+        SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).faith += 1;
         SC_Logics.Instance.MakeCardShow();
     }
 }
@@ -354,7 +354,7 @@ public class MedicCard : Card
         SC_Logics.Instance.UnityObjects["Drawen_Card"].SetActive(true);
         SC_Logics.Instance.UnityObjects["Drawen_Card"].GetComponent<Image>().sprite = Deck_Manager.Instance.Album[Picture];
         SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Medic\nYou Where healed for 1 HP";
-        Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).hp += 1;
+        SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).hp += 1;
         SC_Logics.Instance.MakeCardShow();
     }
 }
@@ -368,11 +368,11 @@ public class BlackSmithCard : Card
     {
         SC_Logics.Instance.UnityObjects["Drawen_Card"].SetActive(true);
         SC_Logics.Instance.UnityObjects["Drawen_Card"].GetComponent<Image>().sprite = Deck_Manager.Instance.Album[Picture];
-        if(Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).gold >= 5)
+        if(SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).gold >= 5)
         {
             SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "BlackSmith\nYou upgraded your equipment for 5 gold";
-            Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).gold -= 5;
-            Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).pwr += 1;
+            SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).gold -= 5;
+            SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).pwr += 1;
         }
         else
         {
@@ -412,8 +412,8 @@ public class DragonCard : Card
         SC_Logics.Instance.UnityObjects["Drawen_Card"].SetActive(true);
         SC_Logics.Instance.UnityObjects["Drawen_Card"].GetComponent<Image>().sprite = Deck_Manager.Instance.Album[Picture];
         SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Monster\nPower level " + Power;
-        Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).Turn_Status = Global_Variables.turn_Status.Battle;
-        if (Player_Info.Stats(SC_Logics.Instance.GetCurrentPlayer()).IsABot == false)
+        SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).Turn_Status = Global_Variables.turn_Status.Battle;
+        if (SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).IsABot == false)
             SC_Logics.Instance.EnableDice(true);
         SC_Logics.Instance.IsFightingDragon = true;
     }
