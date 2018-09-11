@@ -1,4 +1,5 @@
-﻿using System;
+﻿using com.shephertz.app42.gaming.multiplayer.client;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +7,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class Deck_Manager : MonoBehaviour {
-    Stack<Card> BlueDeck,RedDeck;
+    public Stack<Card> BlueDeck,RedDeck;
     List<Card> L1, L2;
     Card Curr;
     HouseCard House;
@@ -60,13 +61,18 @@ public class Deck_Manager : MonoBehaviour {
         }
         for(int i =0; i<10; i++)
         {
-            L1.Add(new GoldCard(1, 3));
             L1.Add(new GoldCard(2, 3));
             L1.Add(new BlessCard(5));
             L1.Add(new CurseCard(4));
             L2.Add(new BlessCard(14));
             L2.Add(new CurseCard(13));
         }
+
+    }
+    public void ReplaceDecks(Stack<Card> b, Stack<Card> r)
+    {
+        BlueDeck = b;
+        RedDeck = r;
 
     }
     public void RestartDecks()
@@ -113,21 +119,36 @@ public class Deck_Manager : MonoBehaviour {
 
     public void Draw(int Tile)
     {
-        RegularDraw = true;
+        if (SC_Logics.Instance.isMyTurn)
+        {
         SC_Logics.Instance.UnityObjects["ReRoll"].SetActive(false);
         SC_Logics.Instance.UnityObjects["Interact"].SetActive(false);
         SC_Logics.Instance.UnityObjects["Fight_Player"].SetActive(false);
+        ArrangeDrawenCard(Tile);
         CheckDeckForEmpty();
-        if(Tile < 100)
+            if (SC_Logics.Instance.PlayingMulti)
+            {
+                Dictionary<string, object> _toSend = new Dictionary<string, object>();
+                _toSend.Add("Move", "Draw");
+                _toSend.Add("Tile", Tile.ToString());
+                string _jsonToSend = MiniJSON.Json.Serialize(_toSend);
+                WarpClient.GetInstance().SendChat(_jsonToSend);
+            }          
+        }
+    }
+    public void ArrangeDrawenCard(int Tile)
+    {
+        RegularDraw = true;
+        if (Tile < 100)
         {
-            if(Tile == 0)
+            if (Tile == 0)
             {
-               Curr=House;
-               RegularDraw = false;
+                Curr = House;
+                RegularDraw = false;
             }
-            else if(Tile == 6)
+            else if (Tile == 6)
             {
-                Curr=Church;
+                Curr = Church;
                 RegularDraw = false;
             }
             else if (Tile == 11)
@@ -140,12 +161,12 @@ public class Deck_Manager : MonoBehaviour {
                 Curr = TransportToInner;
                 RegularDraw = false;
             }
-            else if(Tile == 17)
+            else if (Tile == 17)
             {
                 Curr = Medic;
                 RegularDraw = false;
             }
-            if(RegularDraw)
+            if (RegularDraw)
             {
                 Curr = BlueDeck.Peek();
                 BlueDeck.Pop();
@@ -153,33 +174,44 @@ public class Deck_Manager : MonoBehaviour {
         }
         else
         {
-            if(Tile == 109)
+            if (Tile == 109)
             {
                 Curr = TransportToOuter;
                 RegularDraw = false;
             }
-            else if(Tile  == 106)
+            else if (Tile == 106)
             {
                 Curr = Dragon;
                 RegularDraw = false;
             }
             if (RegularDraw)
             {
-            Curr = RedDeck.Peek();
-            RedDeck.Pop();
+                Curr = RedDeck.Peek();
+                RedDeck.Pop();
             }
         }
-
-
         Curr.PlayCard();
     }
-
     private void CheckDeckForEmpty()
     {
         if (BlueDeck.Count == 0)
+        {
             RestartDeckBlue();
+            if (SC_Logics.Instance.PlayingMulti)
+            {
+                RestartDecks();
+                SC_Logics.Instance.MakeUnanimousDeck();
+            }
+        }
         if (RedDeck.Count == 0)
+        { 
             RestartDeckRed();
+            if (SC_Logics.Instance.PlayingMulti)
+            {
+                RestartDecks();
+                SC_Logics.Instance.MakeUnanimousDeck();
+            }
+        }
 
     }
 
@@ -192,7 +224,7 @@ public class Deck_Manager : MonoBehaviour {
 
 public class Card
 {
-    protected int Picture;//this can save somespace (using 100-200  ints insted of 100-200 sprites)
+    public int Picture;//this can save somespace (using 100-200  ints insted of 100-200 sprites)
 
     public virtual void PlayCard()
     {
@@ -255,23 +287,20 @@ public class BlessCard : Card
         int Rand = UnityEngine.Random.Range(1, 5);
         SC_Logics.Instance.UnityObjects["Drawen_Card"].SetActive(true);
         SC_Logics.Instance.UnityObjects["Drawen_Card"].GetComponent<Image>().sprite = Deck_Manager.Instance.Album[Picture];
+        SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Blessing\nYou Recived a random reward";
         switch (Rand)
         {
             case 1:
                 SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).gold += 2;
-                SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Blessing\nYou have been granted 2 Coins";
                 break;
             case 2:
                 SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).hp += 1;
-                SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Blessing\nYou have been granted 1 Hp";
                 break;
             case 3:
                 SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).faith += 1;
-                SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Blessing\nYou have been granted 1 Faith";
                 break;
             case 4:
                 SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).AddXp(3);
-                SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Blessing\nYou have been granted 3 Xp";
                 break;
         }
         SC_Logics.Instance.MakeCardShow();
@@ -290,23 +319,23 @@ public class CurseCard : Card
         int Rand = UnityEngine.Random.Range(1, 5);
         SC_Logics.Instance.UnityObjects["Drawen_Card"].SetActive(true);
         SC_Logics.Instance.UnityObjects["Drawen_Card"].GetComponent<Image>().sprite = Deck_Manager.Instance.Album[Picture];
+        SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Curse\nYou got a random curse";
         switch (Rand)
         {
             case 1:
                 SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).gold = 0;
-                SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Curse\nYou Lost your Coins";
                 break;
             case 2:
-                SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).TakeAhit();
-                SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Curse\nYou Were Damaged for 1 Hp";
+                if (SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).TakeAhit())
+                {
+                    SC_Logics.Instance.RestartPlayerPos(SC_Logics.Instance.GetCurrentPlayer());
+                }
                 break;
             case 3:
                 SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).faith = 0;
-                SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Curse\nYour Gods Have abandoned you\nYour Faith is now 0";
                 break;
             case 4:
                 SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).xp=0;
-                SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Curse\nYou have Amnesia\nYour Xp is now 0";
                 break;
         }
         SC_Logics.Instance.MakeCardShow();

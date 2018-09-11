@@ -46,6 +46,31 @@ public class UI_Controller : MonoBehaviour {
     }
     public void StartGameSingle()
     {
+        UI_Manager.Instance.BtnClick();
         UI_Manager.Instance.StartGameSingle();
+    }
+    public void UpdateUser()
+    {
+        UI_Manager.Instance.BtnClick();
+        UI_Manager.Instance.UpdateUser();
+    }
+
+    public void UpdatePass()
+    {
+        UI_Manager.Instance.BtnClick();
+        UI_Manager.Instance.UpdatePass();
+    }
+    public void VerifyLogin()
+    {
+        UI_Manager.Instance.BtnClick();
+        UI_Manager.Instance.VerifyLogin();
+    }
+    public void UpdateSliderPlayers_Multi()
+    {
+        UI_Manager.Instance.UpdateSliderPlayers_Multi();
+    }
+    public void Play_MultiPlayer()
+    {
+        UI_Manager.Instance.Play_MultiPlayer();
     }
 }

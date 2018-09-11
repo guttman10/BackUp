@@ -5,7 +5,8 @@ using UnityEngine;
 public class Player_Info : MonoBehaviour
 {
 
-    public int gold, hp, faith, pos,xp,pwr;
+    public int gold, hp, faith, pos, xp, pwr;
+
     public bool IsABot;
     public Global_Variables.turn_Status Turn_Status;
     static Player_Info inst;
