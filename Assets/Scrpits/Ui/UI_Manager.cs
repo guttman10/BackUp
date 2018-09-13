@@ -15,7 +15,7 @@ public class UI_Manager : MonoBehaviour {
     private List<string> rooms;
     private int index = 0;
     private string roomId = string.Empty;
-    enum screen {Main_Menu,Loading,Options,Menu_Multi,Stud_Menu,Menu_Single,Login }
+    public enum screen {Main_Menu,Loading,Options,Menu_Multi,Stud_Menu,Menu_Single,Login }
     screen curr;
     Stack<screen> s;
     string Pass;
@@ -76,7 +76,7 @@ public class UI_Manager : MonoBehaviour {
         foreach (GameObject i in _UiObjects)
             UiObjects.Add(i.name, i);
     }
-    void changeScreens(screen New)
+    public void changeScreens(screen New)
     {
         UiObjects[""+curr].SetActive(false);
         UiObjects[""+New].SetActive(true);
@@ -232,7 +232,7 @@ public class UI_Manager : MonoBehaviour {
         else
         {
             UpdateStatus("Creating Room...");
-            WarpClient.GetInstance().CreateTurnRoom( Global_Variables.User+"'s Room", Global_Variables.User, MainGame.GetComponent<SC_Logics>().PlayerCount, matchRoomData, 30);
+            WarpClient.GetInstance().CreateTurnRoom( Global_Variables.User+"'s Room", Global_Variables.User, MainGame.GetComponent<SC_Logics>().PlayerCount, matchRoomData, 120);
         }
     }
         private void OnCreateRoom(bool _IsSuccess, string _RoomId)

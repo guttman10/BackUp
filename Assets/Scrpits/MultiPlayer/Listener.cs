@@ -329,7 +329,6 @@ namespace AssemblyCSharp
 		
 		public void onChatReceived (ChatEvent eventObj)
 		{
-			Debug.Log(eventObj.getSender() + " sent " + eventObj.getMessage());
             if(OnChatReceived != null)
             {
                 OnChatReceived(eventObj);

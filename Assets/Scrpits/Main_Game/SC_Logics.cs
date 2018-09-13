@@ -16,7 +16,7 @@ public class SC_Logics : MonoBehaviour
     public int DiceValue, Turn;
     int TotalPower1, TotalPower2;
     public int PlayerCount, Myturn;
-    int Oppnent;
+    int Opponent;
     private IEnumerator coroutine;
     static SC_Logics inst;
     Button go1, go2;
@@ -51,11 +51,14 @@ public class SC_Logics : MonoBehaviour
         SetUpBoard();
         Listener.OnMoveCompleted += OnMoveCompleted;
         Listener.OnChatReceived += OnChatReceived;
+        Listener.OnGameStopped += OnGameStopped;
+
     }
 
     void OnDisable()
     {
         Listener.OnMoveCompleted -= OnMoveCompleted;
+        Listener.OnChatReceived -= OnChatReceived;
     }
     void InitDiconatries()
     {
@@ -142,6 +145,7 @@ public class SC_Logics : MonoBehaviour
         UnityObjects["ReRoll"].SetActive(false);
         UnityObjects["Player_Stats"].SetActive(false);
     }
+    
     public void RestartPlayerPos(int p)
     {
         Vector2 Target = Tilles["Tile_" + 0].GetComponent<RectTransform>().position;
@@ -155,9 +159,9 @@ public class SC_Logics : MonoBehaviour
     {
         return Turn % PlayerCount + 1;
     }
-    void ChangeCurrentTurnSprite()
+    void ChangeCurrentTurnSprite(int p)
     {
-        UnityObjects["Current_Player"].GetComponent<Image>().sprite = PlayerSpriteTurn[GetCurrentPlayer() - 1];
+        UnityObjects["Current_Player"].GetComponent<Image>().sprite = PlayerSpriteTurn[p - 1];
     }
     void BotPlay()
     {
@@ -171,13 +175,19 @@ public class SC_Logics : MonoBehaviour
             if (PlayingMulti)
             {
                 Dictionary<string, object> _toSend = new Dictionary<string, object>();
-                _toSend.Add("Move", "End");           
+                _toSend.Add("Move", "End");
+                _toSend.Add("HP", Stats(GetCurrentPlayer()).hp.ToString());
+                _toSend.Add("faith", Stats(GetCurrentPlayer()).faith.ToString());
+                _toSend.Add("xp", Stats(GetCurrentPlayer()).xp.ToString());
+                _toSend.Add("gold", Stats(GetCurrentPlayer()).gold.ToString());
+                _toSend.Add("pwr", Stats(GetCurrentPlayer()).pwr.ToString());
                 string _jsonToSend = MiniJSON.Json.Serialize(_toSend);
                 WarpClient.GetInstance().SendChat(_jsonToSend);
             }
             SubmitTurnPass();
         }
     }
+
     void SubmitTurnPass()
     {
         if (Stats(GetCurrentPlayer()).Turn_Status == Global_Variables.turn_Status.Battle)
@@ -193,7 +203,7 @@ public class SC_Logics : MonoBehaviour
             SetUpBoard();
             Stats(GetCurrentPlayer()).Turn_Status = Global_Variables.turn_Status.Idle;
             Turn++;
-            ChangeCurrentTurnSprite();
+            ChangeCurrentTurnSprite(GetCurrentPlayer());
             Stats(GetCurrentPlayer()).Turn_Status = Global_Variables.turn_Status.Moving;
             if (Stats(GetCurrentPlayer()).IsABot)
                 Invoke("BotPlay", 0.5f);
@@ -212,6 +222,7 @@ public class SC_Logics : MonoBehaviour
                 Dictionary<string, object> _toSend = new Dictionary<string, object>();
                 _toSend.Add("Move", "Roll");
                 _toSend.Add("Dval", DiceValue.ToString());
+                
                 string _jsonToSend = MiniJSON.Json.Serialize(_toSend);
                 WarpClient.GetInstance().SendChat(_jsonToSend);
             }
@@ -234,7 +245,7 @@ public class SC_Logics : MonoBehaviour
         }
         if (OpponentRoll)
         {
-            if (Stats(Oppnent).IsABot == false && HasOpponentReRolled == false)
+            if (Stats(Opponent).IsABot == false && HasOpponentReRolled == false)
             {
                 UnityObjects["ReRoll2"].SetActive(true);
             }
@@ -271,9 +282,9 @@ public class SC_Logics : MonoBehaviour
     {
         if (isMyTurn)
         {
+            UnityObjects["ReRoll"].SetActive(false);
             DiceValue = Random.Range(1, 7);
             Stats(GetCurrentPlayer()).faith--;
-            UnityObjects["ReRoll"].SetActive(false);
             HasReRolled = true;
             coroutine = RollTheDice();
             StartCoroutine(coroutine);
@@ -289,7 +300,6 @@ public class SC_Logics : MonoBehaviour
                 _toSend.Add("Dval", DiceValue.ToString());
                 if (Stats(GetCurrentPlayer()).Turn_Status == Global_Variables.turn_Status.Moving)
                 {
-                    Debug.Log("e");
                     _toSend.Add("Moving", "Y");
                 }
                 else
@@ -303,7 +313,7 @@ public class SC_Logics : MonoBehaviour
     }
     public void ReRollOpponent()
     {
-        Stats(Oppnent).faith--;
+        Stats(Opponent).faith--;
         UnityObjects["ReRoll2"].SetActive(false);
         HasOpponentReRolled = true;
         coroutine = RollTheDice();
@@ -322,8 +332,15 @@ public class SC_Logics : MonoBehaviour
                 string _jsonToSend = MiniJSON.Json.Serialize(_toSend);
                 WarpClient.GetInstance().SendChat(_jsonToSend);
             }
-
             SubmitMove(Tile_Num);
+            UnityObjects["Interact"].SetActive(true);
+            for (int i = 1; i <= PlayerCount; i++)
+            {
+                if (Stats(i).pos == Stats(GetCurrentPlayer()).pos && i != GetCurrentPlayer())
+                {
+                    UnityObjects["Fight_Player"].SetActive(true);
+                }
+            }
         }
     }
 
@@ -338,15 +355,7 @@ public class SC_Logics : MonoBehaviour
         Stats(GetCurrentPlayer()).pos = Tile_Num;
         UpdateTiles(false, Original_TileColor);
         HasReRolled = false;
-        UnityObjects["Interact"].SetActive(true);
 
-        for (int i = 1; i <= PlayerCount; i++)
-        {
-            if (Stats(i).pos == Stats(GetCurrentPlayer()).pos && i != GetCurrentPlayer())
-            {
-                UnityObjects["Fight_Player"].SetActive(true);
-            }
-        }
     }
 
     public void MakeUnanimousDeck()
@@ -380,7 +389,6 @@ public class SC_Logics : MonoBehaviour
      *      L1.Add(new MonsterCard(2, 0));
             L1.Add(new MonsterCard(3, 1));
             L1.Add(new MonsterCard(4, 2));
-            L1.Add(new GoldCard(1, 3));
             L1.Add(new GoldCard(2, 3));
             L1.Add(new BlessCard(5));
             L1.Add(new CurseCard(4));
@@ -524,6 +532,9 @@ public class SC_Logics : MonoBehaviour
         {
             if (IsFightingDragon)
             {
+                if(PlayingMulti)
+                     WarpClient.GetInstance().stopGame();
+
                 NoWinner = false;
                 UnityObjects["Winning_Msg"].SetActive(true);
                 UnityObjects["Winning_Text"].GetComponent<Text>().text = "Player " + GetCurrentPlayer() + "\n Victory!";
@@ -542,24 +553,29 @@ public class SC_Logics : MonoBehaviour
 
         }
     }
+    void ShowContinueFixBug()
+    {
+        UnityObjects["Continue"].SetActive(true);
+    }
+
     public void MakeCardShow()
     {
-        if (Stats(GetCurrentPlayer()).IsABot == false)
+        if (Stats(GetCurrentPlayer()).IsABot == false && isMyTurn)
         {
-            UnityObjects["Continue"].SetActive(true);
+           Invoke("ShowContinueFixBug", 2);
         }
         else
         {
-            Invoke("PassTurn", 1.5f);
+            Invoke("PassTurn", 1f);
         }
     }
     void ApplyPlayerBattleResult()
     {
         if (TotalPower1 > TotalPower2)
         {
-            if (Stats(Oppnent).TakeAhit())
+            if (Stats(Opponent).TakeAhit())
             {
-                RestartPlayerPos(Oppnent);
+                RestartPlayerPos(Opponent);
             }
         }
         else if (TotalPower1 < TotalPower2)
@@ -587,8 +603,8 @@ public class SC_Logics : MonoBehaviour
     }
     public void FightPlayer(int x)
     {
-        Oppnent = x;
-        Stats(Oppnent).Turn_Status = Global_Variables.turn_Status.BattlePlayer;
+        Opponent = x;
+        Stats(Opponent).Turn_Status = Global_Variables.turn_Status.BattlePlayer;
         Stats(GetCurrentPlayer()).Turn_Status = Global_Variables.turn_Status.BattlePlayer;
         for (int i = 1; i <= 4; i++)
         {
@@ -596,7 +612,15 @@ public class SC_Logics : MonoBehaviour
         }
         UnityObjects["Drawen_Card"].SetActive(true);
         UnityObjects["Drawen_Card"].GetComponent<Image>().sprite = PlayerBattleBackGround;
-        UnityObjects["Card_Text"].GetComponent<Text>().text = "Fighting Player " + Oppnent;
+        UnityObjects["Card_Text"].GetComponent<Text>().text = "Player " +GetCurrentPlayer() + " VS Player " + Opponent;
+        if (PlayingMulti)
+        {
+            Dictionary<string, object> _toSend = new Dictionary<string, object>();
+            _toSend.Add("Move", "FP");
+            _toSend.Add("Opponent", Opponent.ToString());
+            string _jsonToSend = MiniJSON.Json.Serialize(_toSend);
+            WarpClient.GetInstance().SendChat(_jsonToSend);
+        }
         EnableDice(true);
     }
     void BattlePlayerPhaseOne()
@@ -604,14 +628,16 @@ public class SC_Logics : MonoBehaviour
         UnityObjects["Battle"].SetActive(true);
         TotalPower1 = Stats(GetCurrentPlayer()).pwr + DiceValue;
         UnityObjects["Battle_Roll"].GetComponent<Text>().text = "" + TotalPower1;
-        UnityObjects["Continue2"].SetActive(true);
+        if(isMyTurn)
+            UnityObjects["Continue2"].SetActive(true);
     }
     public void BattlePlayerPhaseTwo()
     {
+        ChangeCurrentTurnSprite(Opponent);
         UnityObjects["ReRoll"].SetActive(false);
         UnityObjects["Continue2"].SetActive(false);
         OpponentRoll = true;
-        if (Stats(Oppnent).IsABot)
+        if (Stats(Opponent).IsABot)
         {
             Invoke("Roll", 1);
         }
@@ -619,10 +645,19 @@ public class SC_Logics : MonoBehaviour
         {
             EnableDice(true);
         }
+        if (PlayingMulti)
+        {
+            EnableDice(false);
+            isMyTurn = false;
+            Dictionary<string, object> _toSend = new Dictionary<string, object>();
+            _toSend.Add("Move", "FP2");
+            string _jsonToSend = MiniJSON.Json.Serialize(_toSend);
+            WarpClient.GetInstance().SendChat(_jsonToSend);
+        }
     }
     void BattlePlayerPhaseThree()
     {
-        TotalPower2 = Stats(Oppnent).pwr + DiceValue;
+        TotalPower2 = Stats(Opponent).pwr + DiceValue;
         UnityObjects["Battle_Roll"].GetComponent<Text>().text = TotalPower1 + " VS " + TotalPower2;
         if (TotalPower1 > TotalPower2)
         {
@@ -630,20 +665,36 @@ public class SC_Logics : MonoBehaviour
         }
         else if (TotalPower1 < TotalPower2)
         {
-            UnityObjects["Battle_Result_Text"].GetComponent<Text>().text = "Player " + Oppnent + " Win!";
+            UnityObjects["Battle_Result_Text"].GetComponent<Text>().text = "Player " + Opponent + " Win!";
         }
         else
         {
             UnityObjects["Battle_Result_Text"].GetComponent<Text>().text = "Draw!";
         }
+        if (PlayingMulti && isMyTurn)
+        {
+            EnableDice(false);
+            isMyTurn = false;
+            Dictionary<string, object> _toSend = new Dictionary<string, object>();
+            _toSend.Add("Move", "FP3");
+            string _jsonToSend = MiniJSON.Json.Serialize(_toSend);
+            WarpClient.GetInstance().SendChat(_jsonToSend);
+        }
+        if (PlayingMulti)
+        {
+            Invoke("MakeCardShow", 1f);
+        }
+        else
+        {
         MakeCardShow();
+        }
     }
     public void ShowStats()
     {
         UnityObjects["Player_Stats"].SetActive(true);
         for (int i = 1; i <= 4; i++)
         {
-            UnityObjects["Text_P" + i].GetComponent<Text>().text = "Power: " + Stats(i).pwr + "\nFaith: " + Stats(i).faith + "\nGold: " + Stats(i).gold + "\nHP: " + Stats(i).hp +"\nXp: " + Stats(i).xp;
+            UnityObjects["Text_P" + i].GetComponent<Text>().text ="Player "+i +"\nPower: " + Stats(i).pwr + "\nFaith: " + Stats(i).faith + "\nGold: " + Stats(i).gold + "\nHP: " + Stats(i).hp +"\nXp: " + Stats(i).xp;
         }
     }
     public void EnableDice(bool Enabler)
@@ -666,7 +717,8 @@ public class SC_Logics : MonoBehaviour
 
     public void OnChatReceived(ChatEvent eventObj)
     {
-     Dictionary<string, object> _receivedData = MiniJSON.Json.Deserialize(eventObj.getMessage()) as Dictionary<string, object>;
+        Debug.Log(eventObj.getSender() + " sent " + eventObj.getMessage());
+        Dictionary<string, object> _receivedData = MiniJSON.Json.Deserialize(eventObj.getMessage()) as Dictionary<string, object>;
         if (eventObj.getSender() != Global_Variables.User)
         {
             if (eventObj.getMessage() != null)
@@ -686,7 +738,11 @@ public class SC_Logics : MonoBehaviour
                     if (_receivedData["Move"].ToString() == "ReRoll")
                     {
                         HasReRolled = true;
-                        Stats(GetCurrentPlayer()).faith--;
+                        UnityObjects["ReRoll"].SetActive(false);
+                        if (Stats(GetCurrentPlayer()).faith > 0)
+                        {
+                            Stats(GetCurrentPlayer()).faith--;
+                        }
                         if (_receivedData["Moving"].ToString() == "Y")
                         {
                             UpdateTiles(false, Original_TileColor);
@@ -704,8 +760,41 @@ public class SC_Logics : MonoBehaviour
                     {
                         Deck_Manager.Instance.ArrangeDrawenCard(int.Parse(_receivedData["Tile"].ToString()));
                     }
+
+                    if(_receivedData["Move"].ToString() == "FP"){
+                        Opponent = int.Parse(_receivedData["Opponent"].ToString());
+                        EnableDice(false);
+                        Stats(GetCurrentPlayer()).Turn_Status = Global_Variables.turn_Status.BattlePlayer;
+                        Stats(Opponent).Turn_Status = Global_Variables.turn_Status.BattlePlayer;
+                        UnityObjects["Drawen_Card"].SetActive(true);
+                        UnityObjects["Drawen_Card"].GetComponent<Image>().sprite = PlayerBattleBackGround;
+                        UnityObjects["Card_Text"].GetComponent<Text>().text ="Player " + GetCurrentPlayer() + " VS Player " + Opponent;
+                    }
+
+                    if (_receivedData["Move"].ToString() == "FP2")
+                    {
+                        ChangeCurrentTurnSprite(Opponent);
+                        OpponentRoll = true;
+                        UnityObjects["ReRoll"].SetActive(false);
+                        if (Opponent == Myturn)
+                        {
+                            EnableDice(true);
+                            isMyTurn = true;
+                        }
+                    }
+                    if (_receivedData["Move"].ToString() == "FP3")
+                    {
+                        isMyTurn = false;
+                        BattlePlayerPhaseThree();
+                    }
+
                     if (_receivedData["Move"].ToString() == "End")
                     {
+                        Stats(GetCurrentPlayer()).hp = int.Parse(_receivedData["HP"].ToString());
+                        Stats(GetCurrentPlayer()).faith = int.Parse(_receivedData["faith"].ToString());
+                        Stats(GetCurrentPlayer()).gold = int.Parse(_receivedData["gold"].ToString());
+                        Stats(GetCurrentPlayer()).xp = int.Parse(_receivedData["xp"].ToString());
+                        Stats(GetCurrentPlayer()).pwr = int.Parse(_receivedData["pwr"].ToString());
                         SubmitTurnPass();
                         if(GetCurrentPlayer() == Myturn)
                         {
@@ -723,11 +812,31 @@ public class SC_Logics : MonoBehaviour
         {
             if (_receivedData["Move"].ToString() == "End")
             {
+                WarpClient.GetInstance().sendMove("done");
                 isMyTurn = false;
+                if (GetCurrentPlayer() == Myturn){
+
+                    isMyTurn = true;
+                }
+            }
+            if (_receivedData["Move"].ToString() == "FP2")
+            {
+                    isMyTurn = false;
+            }
+            if (_receivedData["Move"].ToString() == "FP3")
+            {
+                isMyTurn = true;
             }
         }
+    }
 
-
+    void OnGameStopped(string _Sender, string _RoomId)
+    {
+        NoWinner = false;
+        UnityObjects["Winning_Msg"].SetActive(true);
+        UnityObjects["Winning_Text"].GetComponent<Text>().text = "Player " + _Sender + "\n Victory!";
+        WarpClient.GetInstance().UnsubscribeRoom(_RoomId);
+        WarpClient.GetInstance().LeaveRoom(_RoomId);
     }
 
 

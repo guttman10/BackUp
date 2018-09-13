@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class SC_GameManager : MonoBehaviour {
-    public GameObject Game, Menu;
+    public GameObject Game, Menu,Loading,MainMenu;
     public void Roll()
     {
         SC_Logics.Instance.Roll();
@@ -48,6 +48,7 @@ public class SC_GameManager : MonoBehaviour {
     {
         Game.SetActive(false);
         Menu.SetActive(true);
+        UI_Manager.Instance.changeScreens(UI_Manager.screen.Main_Menu);
     }
     public void ShowStats()
     {
