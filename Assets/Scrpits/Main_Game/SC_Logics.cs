@@ -13,6 +13,8 @@ public class SC_Logics : MonoBehaviour
     public Sprite[] PlayerSpriteTurn;
     public Button Dice;
     public Button BasicTile;
+    Vector2 Target;
+    Vector2 Player;
     public int DiceValue, Turn;
     int TotalPower1, TotalPower2;
     public int PlayerCount, Myturn;
@@ -213,6 +215,7 @@ public class SC_Logics : MonoBehaviour
     }
     public void Roll()
     {
+        UnityObjects["Continue"].SetActive(false);
         if (isMyTurn)
         {
             coroutine = RollTheDice();
@@ -233,6 +236,7 @@ public class SC_Logics : MonoBehaviour
 
     public IEnumerator RollTheDice()
     {
+        UnityObjects["Continue"].SetActive(false);
         for (int i = 0; i < 20; i++)
         {
             Dice.GetComponent<Image>().sprite = DiceNum[Random.Range(1, 7) - 1];
@@ -280,6 +284,7 @@ public class SC_Logics : MonoBehaviour
     }
     public void ReRoll()
     {
+        UnityObjects["Continue"].SetActive(false);
         if (isMyTurn)
         {
             UnityObjects["ReRoll"].SetActive(false);
@@ -333,6 +338,76 @@ public class SC_Logics : MonoBehaviour
                 WarpClient.GetInstance().SendChat(_jsonToSend);
             }
             SubmitMove(Tile_Num);
+        }
+    }
+    void SubmitMove(int Tile_Num)
+    {
+        UnityObjects["ReRoll"].SetActive(false);
+        Target = Tilles["Tile_" + Tile_Num].GetComponent<RectTransform>().position;
+        Player = Players["Player_" + GetCurrentPlayer()].GetComponent<RectTransform>().position;
+        StartCoroutine(AnimateMove(Tile_Num));
+        UpdateTiles(false, Original_TileColor);
+        HasReRolled = false;
+
+    }
+
+    public IEnumerator AnimateMove(int Tile_Num)
+    {
+        if (Tile_Num < 100)
+        {
+            if ((Stats(GetCurrentPlayer()).pos + DiceValue) % 22 == Tile_Num)
+            {
+
+                for (int i = 1; i <= DiceValue; i++)
+                {
+                    Target = Tilles["Tile_" + ((Stats(GetCurrentPlayer()).pos + i) % 22)].GetComponent<RectTransform>().position;
+                    Target.y += Random.Range(-20, 20);
+                    Target.x += Random.Range(-20, 20);
+                    Players["Player_" + GetCurrentPlayer()].GetComponent<RectTransform>().position = Vector2.MoveTowards(Player, Target, 1000);
+                    yield return new WaitForSeconds(0.11f);
+                }
+            }
+            else
+            {
+                for (int i = 1; i <= DiceValue; i++)
+                {
+                    Target = Tilles["Tile_" + ((22 + Stats(GetCurrentPlayer()).pos - i) % 22)].GetComponent<RectTransform>().position;
+                    Target.y += Random.Range(-20, 20);
+                    Target.x += Random.Range(-20, 20);
+                    Players["Player_" + GetCurrentPlayer()].GetComponent<RectTransform>().position = Vector2.MoveTowards(Player, Target, 1000);
+                    yield return new WaitForSeconds(0.11f);
+                }
+            }
+        }
+        else
+        {
+            if ( (((Stats(GetCurrentPlayer()).pos - 100 + DiceValue) % 14) +100) == Tile_Num)
+            {
+
+                for (int i = 1; i <= DiceValue; i++)
+                {
+                    Target = Tilles["Tile_" + (((Stats(GetCurrentPlayer()).pos - 100 + i) % 14) + 100)].GetComponent<RectTransform>().position;
+                    Target.y += Random.Range(-20, 20);
+                    Target.x += Random.Range(-20, 20);
+                    Players["Player_" + GetCurrentPlayer()].GetComponent<RectTransform>().position = Vector2.MoveTowards(Player, Target, 1000);
+                    yield return new WaitForSeconds(0.11f);
+                }
+            }
+            else
+            {
+                for (int i = 1; i <= DiceValue; i++)
+                {
+                    Target = Tilles["Tile_" + (((14 + Stats(GetCurrentPlayer()).pos - 100 - i) % 14) + 100)].GetComponent<RectTransform>().position;
+                    Target.y += Random.Range(-20, 20);
+                    Target.x += Random.Range(-20, 20);
+                    Players["Player_" + GetCurrentPlayer()].GetComponent<RectTransform>().position = Vector2.MoveTowards(Player, Target, 1000);
+                    yield return new WaitForSeconds(0.11f);
+                }
+            }
+        }
+        Stats(GetCurrentPlayer()).pos = Tile_Num;
+        if (isMyTurn)
+        {
             UnityObjects["Interact"].SetActive(true);
             for (int i = 1; i <= PlayerCount; i++)
             {
@@ -343,21 +418,13 @@ public class SC_Logics : MonoBehaviour
             }
         }
     }
-
-    void SubmitMove(int Tile_Num)
+    public void Transport(int t)
     {
-        UnityObjects["ReRoll"].SetActive(false);
-        Vector2 Target = Tilles["Tile_" + Tile_Num].GetComponent<RectTransform>().position;
-        Vector2 Player = Players["Player_" + GetCurrentPlayer()].GetComponent<RectTransform>().position;
-        Target.y += Random.Range(-20, 20);
-        Target.x += Random.Range(-20, 20);
+        Player = Players["Player_" + GetCurrentPlayer()].GetComponent<RectTransform>().position;
+        Target = Tilles["Tile_" + t].GetComponent<RectTransform>().position;
         Players["Player_" + GetCurrentPlayer()].GetComponent<RectTransform>().position = Vector2.MoveTowards(Player, Target, 1000);
-        Stats(GetCurrentPlayer()).pos = Tile_Num;
-        UpdateTiles(false, Original_TileColor);
-        HasReRolled = false;
-
+        Stats(GetCurrentPlayer()).pos = t;
     }
-
     public void MakeUnanimousDeck()
     {
         Stack<Card> TempBdeck = new Stack<Card>(Deck_Manager.Instance.BlueDeck);//this reverse the original deck
@@ -468,7 +535,7 @@ public class SC_Logics : MonoBehaviour
         }
         else
         {
-            go1 = Tilles["Tile_" + (((pos - 100 + DiceValue) % 14) + 100)].GetComponent<Button>();
+            go1 = Tilles["Tile_" + ( ((pos - 100 + DiceValue) % 14) + 100)].GetComponent<Button>();
             go2 = Tilles["Tile_" + (((14 + pos - 100 - DiceValue) % 14) + 100)].GetComponent<Button>();
         }
         UpdateTiles(true, TileColorer);
@@ -484,6 +551,7 @@ public class SC_Logics : MonoBehaviour
     }
     void Battle(bool Player_Has_Rolled)
     {
+        UnityObjects["ReRoll"].SetActive(false);
         UnityObjects["Battle"].SetActive(true);
         if (Player_Has_Rolled)
         {
@@ -496,6 +564,7 @@ public class SC_Logics : MonoBehaviour
         }
         else
         {
+            UnityObjects["ReRoll"].SetActive(true);
             TotalPower2 = Deck_Manager.Instance.GetPower() + DiceValue;
             UnityObjects["Battle_Roll"].GetComponent<Text>().text = TotalPower1 + " VS " + TotalPower2;
             BattleResult();
@@ -510,6 +579,7 @@ public class SC_Logics : MonoBehaviour
 
     private void BattleResult()
     {
+        UnityObjects["Continue"].SetActive(false);
         if (TotalPower1 > TotalPower2)
         {
             UnityObjects["Battle_Result_Text"].GetComponent<Text>().text = "You Win!";
@@ -562,7 +632,7 @@ public class SC_Logics : MonoBehaviour
     {
         if (Stats(GetCurrentPlayer()).IsABot == false && isMyTurn)
         {
-           Invoke("ShowContinueFixBug", 2);
+           Invoke("ShowContinueFixBug", 1.5f);
         }
         else
         {
@@ -689,6 +759,15 @@ public class SC_Logics : MonoBehaviour
         MakeCardShow();
         }
     }
+    public void SendCardText(string s)
+    {
+        Dictionary<string, object> _toSend = new Dictionary<string, object>();
+        _toSend.Add("Move", "CT");
+        _toSend.Add("T", s);
+        string _jsonToSend = MiniJSON.Json.Serialize(_toSend);
+        WarpClient.GetInstance().SendChat(_jsonToSend);
+    } 
+
     public void ShowStats()
     {
         UnityObjects["Player_Stats"].SetActive(true);
@@ -697,6 +776,7 @@ public class SC_Logics : MonoBehaviour
             UnityObjects["Text_P" + i].GetComponent<Text>().text ="Player "+i +"\nPower: " + Stats(i).pwr + "\nFaith: " + Stats(i).faith + "\nGold: " + Stats(i).gold + "\nHP: " + Stats(i).hp +"\nXp: " + Stats(i).xp;
         }
     }
+
     public void EnableDice(bool Enabler)
     {
         Dice.GetComponent<Button>().interactable = Enabler;
@@ -761,7 +841,12 @@ public class SC_Logics : MonoBehaviour
                         Deck_Manager.Instance.ArrangeDrawenCard(int.Parse(_receivedData["Tile"].ToString()));
                     }
 
-                    if(_receivedData["Move"].ToString() == "FP"){
+                    if (_receivedData["Move"].ToString() == "CT")
+                    {
+                        UnityObjects["Card_Text"].GetComponent<Text>().text = _receivedData["T"].ToString();
+                    }
+
+                    if (_receivedData["Move"].ToString() == "FP"){
                         Opponent = int.Parse(_receivedData["Opponent"].ToString());
                         EnableDice(false);
                         Stats(GetCurrentPlayer()).Turn_Status = Global_Variables.turn_Status.BattlePlayer;

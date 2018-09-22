@@ -284,24 +284,36 @@ public class BlessCard : Card
     }
     public override void PlayCard()
     {
+        string s = "Blessing\n"; 
         int Rand = UnityEngine.Random.Range(1, 5);
         SC_Logics.Instance.UnityObjects["Drawen_Card"].SetActive(true);
         SC_Logics.Instance.UnityObjects["Drawen_Card"].GetComponent<Image>().sprite = Deck_Manager.Instance.Album[Picture];
-        SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Blessing\nYou Recived a random reward";
-        switch (Rand)
+        if (SC_Logics.Instance.isMyTurn)
         {
-            case 1:
-                SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).gold += 2;
-                break;
-            case 2:
-                SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).hp += 1;
-                break;
-            case 3:
-                SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).faith += 1;
-                break;
-            case 4:
-                SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).AddXp(3);
-                break;
+            switch (Rand)
+            {
+                case 1:
+                    SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).gold += 2;
+                    s += "You got 2 gold";
+                    break;
+                case 2:
+                    SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).hp += 1;
+                    s += "You got 1 HP";
+                    break;
+                case 3:
+                    SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).faith += 1;
+                    s += "You got 1 Faith";
+                    break;
+                case 4:
+                    SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).AddXp(3);
+                    s += "You got 3 XP";
+                    break;
+            }
+            if (SC_Logics.Instance.PlayingMulti)
+            {
+                SC_Logics.Instance.SendCardText(s);
+            }
+            SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = s;
         }
         SC_Logics.Instance.MakeCardShow();
     }
@@ -317,26 +329,44 @@ public class CurseCard : Card
     public override void PlayCard()
     {
         int Rand = UnityEngine.Random.Range(1, 5);
+        string s = "Curse\n";
         SC_Logics.Instance.UnityObjects["Drawen_Card"].SetActive(true);
         SC_Logics.Instance.UnityObjects["Drawen_Card"].GetComponent<Image>().sprite = Deck_Manager.Instance.Album[Picture];
-        SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Curse\nYou got a random curse";
-        switch (Rand)
+        if (SC_Logics.Instance.isMyTurn)
         {
-            case 1:
-                SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).gold = 0;
-                break;
-            case 2:
-                if (SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).TakeAhit())
-                {
-                    SC_Logics.Instance.RestartPlayerPos(SC_Logics.Instance.GetCurrentPlayer());
-                }
-                break;
-            case 3:
-                SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).faith = 0;
-                break;
-            case 4:
-                SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).xp=0;
-                break;
+            switch (Rand)
+            {
+                case 1:
+                    if (SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).gold > 0)
+                    {
+                        SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).gold--;
+                    }
+                    s += "You lost 1 Gold";
+                    break;
+                case 2:
+                    if (SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).TakeAhit())
+                    {
+                        SC_Logics.Instance.RestartPlayerPos(SC_Logics.Instance.GetCurrentPlayer());
+                    }
+                    s += "You Lost 1 Hp";
+                    break;
+                case 3:
+                    if (SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).faith < 0)
+                    {
+                        SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).faith--;
+                    }
+                    s += "You Lost 1 Faith";
+                    break;
+                case 4:
+                    SC_Logics.Instance.Stats(SC_Logics.Instance.GetCurrentPlayer()).xp = 0;
+                    s += "You Lost ALL your xp";
+                    break;
+            }
+            if (SC_Logics.Instance.PlayingMulti)
+            {
+                SC_Logics.Instance.SendCardText(s);
+            }
+        SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = s;
         }
         SC_Logics.Instance.MakeCardShow();
     }
@@ -424,7 +454,7 @@ public class MoveCard : Card
         SC_Logics.Instance.UnityObjects["Drawen_Card"].GetComponent<Image>().sprite = Deck_Manager.Instance.Album[Picture];
         SC_Logics.Instance.UnityObjects["Card_Text"].GetComponent<Text>().text = "Transport\nYou Where moved to another region";
         SC_Logics.Instance.MakeCardShow();
-        SC_Logics.Instance.Move(toMove);
+        SC_Logics.Instance.Transport(toMove);
         SC_Logics.Instance.UnityObjects["Interact"].SetActive(false);
     }
 }
