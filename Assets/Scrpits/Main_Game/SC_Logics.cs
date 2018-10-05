@@ -318,11 +318,14 @@ public class SC_Logics : MonoBehaviour
     }
     public void ReRollOpponent()
     {
-        Stats(Opponent).faith--;
-        UnityObjects["ReRoll2"].SetActive(false);
-        HasOpponentReRolled = true;
-        coroutine = RollTheDice();
-        StartCoroutine(coroutine);
+        if (isMyTurn)
+        {
+            Stats(Opponent).faith--;
+            UnityObjects["ReRoll2"].SetActive(false);
+            HasOpponentReRolled = true;
+            coroutine = RollTheDice();
+            StartCoroutine(coroutine);
+        }
     }
 
     public void Move(int Tile_Num)
